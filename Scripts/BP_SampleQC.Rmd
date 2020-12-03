@@ -1,0 +1,292 @@
+---
+title: "Sample QC"
+author: "ChristianeGasperi"
+date: "7/26/2019"
+output: 
+ bookdown::pdf_document2:
+  latex_engine: xelatex
+  dev: cairo_pdf
+  keep_tex: true
+params:
+  myParam1:
+    label: "Data directory"
+    value: "/home/cg859/scratch60/BP/Data/Geno"
+    input: text
+  myParam2:
+    label: "Genotype file"
+    value: "all"
+    input: text
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setupQC, echo=FALSE}
+library(ggplot2)
+library(knitr)
+library(gridExtra)
+dirR <- params$myParam1
+prefix <- params$myParam2
+prefix1 <- params$myParam2
+Sys.setenv(dir=params$myParam1)
+Sys.setenv(prefix=params$myParam2)
+Sys.setenv(prefix1=params$myParam2)
+
+
+samtab <- matrix(nrow=6,ncol=4,NA)
+colnames(samtab) <- c("Check","Definition","N. of ident. samples","N. of removed samples")
+samtab[,1] <- c("Missing rate","Heterozygosity","Sex problems","Duplicates","Relatives","Population outliers")
+samtab[,2] <- c("> 2%","> 5 SD from mean","problem in --sex-check","PI_HAT > 0.7","PI_HAT > 0.1875"," > 4SD from mean in MDS comp. 1-6")
+
+
+```
+
+# Sample QC
+
+## Call rate
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+mkdir ${dir}/checkQC
+plink --bfile ${dir}/${prefix} --missing --out ${dir}/checkQC/${prefix}_miss
+```
+
+```{r, echo=FALSE,eval=TRUE}
+IMISS <- read.table(paste0(dirR,"/checkQC/",prefix,"_miss.imiss",collapse=""),h=T)
+
+print("Lowest call rate per person:")
+info <- round(1-as.numeric(as.character(IMISS[which.max(IMISS$F_MISS),"F_MISS"])),3)
+print(info)
+miss_threshold <- 0.02
+print(paste0("Number of individuals with a call rate less than ",toString(1-miss_threshold),":",collapse=""))
+print(nrow(IMISS[which(IMISS$F_MISS>miss_threshold),]))
+
+remove <- IMISS[which(IMISS$F_MISS>miss_threshold),]
+write.table(remove[,1:2],paste0(dirR,"/checkQC/remove_samples_missing.txt",collapse=""),sep="\t",row.names=F,quote=F,col.names=F)
+samtab[1,3] <- nrow(remove)
+samtab[1,4] <- nrow(remove)
+```
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/${prefix} --remove ${dir}/checkQC/remove_samples_missing.txt --make-bed --out ${dir}/checkQC/${prefix}_noMiss
+```
+
+```{r, echo=FALSE,eval=TRUE}
+prefix <- paste0(prefix,"_noMiss",collapes="")
+Sys.setenv(prefix=prefix)
+```
+
+## Heterozygosity
+*(based on the set of variants meeting MAF > 5%, genotyping rate > 98% and HWE p > 1e-6 and pairwise r2 < 0.2)*
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --maf 0.05 --hwe 1e-6 --geno 0.02 --indep-pairwise 200 100 0.2 --make-bed --out ${dir}/checkQC/${prefix}_prunedHET
+plink --bfile ${dir}/checkQC/${prefix} --extract ${dir}/checkQC/${prefix}_prunedHET.prune.in --het --out ${dir}/checkQC/${prefix}_het
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE, eval=TRUE}
+
+het <- read.table(paste0(dirR,"/checkQC/",prefix,"_het.het"), h=T)
+het["Fscaled"] <- scale(het$F)
+remove <- het[which(abs(het$Fscaled)>5),]
+write.table(remove[,1:2],paste0(dirR,"/checkQC/remove_het.txt",collapse=""),sep="\t",row.names=F,quote=F,col.names=F)
+
+print("Number of individuals with excess heterozygosity (> 5 SD from sample mean):")
+print(nrow(remove))
+
+
+samtab[2,3] <- nrow(remove)
+samtab[2,4] <- nrow(remove)
+
+```
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --remove ${dir}/checkQC/remove_het.txt --make-bed --out ${dir}/checkQC/${prefix}_noHet
+```
+
+```{r, echo=FALSE,eval=TRUE}
+prefix <- paste0(prefix,"_noHet",collapse="")
+Sys.setenv(prefix=prefix)
+```
+
+## Sex problems
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+```
+
+```{r gender, echo=FALSE, eval=TRUE}
+print ("We could not check for sex problems, as there was no sex chromosome data available.")
+
+```
+
+## Duplicates and Relatives
+*(based on the set of variants meeting MAF > 5%, genotyping rate > 98% and HWE p > 1e-3 and pairwise r2 < 0.2)*
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --geno 0.02 --hwe 1e-3 --maf 0.05 --indep-pairwise 200 100 0.2 --out ${dir}/checkQC/${prefix}_prunedREL
+plink --bfile ${dir}/checkQC/${prefix} --extract ${dir}/checkQC/${prefix}_prunedREL.prune.in --genome --min 0.0625 --out ${dir}/checkQC/${prefix}_genome
+```
+
+```{r, echo=FALSE, eval=TRUE}
+genome <- read.table(paste0(dirR,"/checkQC/",prefix,"_genome.genome"),h=T)
+IMISS <- read.table(paste0(dirR,"/checkQC/",prefix1,"_miss.imiss",collapse=""),h=T)
+FAM <- read.table(paste0(dirR,"/checkQC/",prefix,".fam",collapse=""))
+
+duplicates <- genome[which(genome$PI_HAT>0.7),c(1,2,3,4,10)]
+duplList <- unique(c(as.character(duplicates$IID1),as.character(duplicates$IID2)))
+
+samtab[4,3] <- length(duplList)
+samtab[4,4] <- 0
+
+relatives <- genome[which(genome$PI_HAT>=0.1875),c(1,2,3,4,10)] 
+relatives <- relatives[order(-relatives$PI_HAT),]
+relList <- c(as.character(relatives$IID1),as.character(relatives$IID2))
+freq <- as.data.frame(table(relList))
+freq <- freq[with(freq,order(-Freq)),]
+
+relMiss <- merge(relatives,IMISS[,c(1:2,6)],by.x=c("FID1","IID1"),by.y=c("FID","IID"))
+relMiss <- merge(relMiss,IMISS[,c(1:2,6)],by.x=c("FID2","IID2"),by.y=c("FID","IID"),suffix=c("1","2"),all.x=T)
+remove <- as.character(relMiss[which(relMiss$F_MISS1>=relMiss$F_MISS2),]$IID1)
+remove2 <- as.character(relMiss[which(relMiss$F_MISS2>=relMiss$F_MISS1),]$IID2)
+remove <- c(remove,remove2)
+
+if (!exists("removeFinal")) removeFinal <- NULL
+if (length(removeFinal)>0)
+  {
+  removeFinal <- c(removeFinal,remove)
+  relatives <- relatives[-which(relatives$IID1 %in% removeFinal | relatives$IID2 %in% removeFinal),]
+  } else if (length(remove)>0)
+  {
+  removeFinal <- remove
+  relatives <- relatives[-which(relatives$IID1 %in% removeFinal | relatives$IID2 %in% removeFinal),]
+  } else removeFinal <- remove
+
+# Generate list of individuals to be removed
+colnames(FAM) <- c("FID", "IID", "PID", "MID", "SEX", "PHENO")
+removeOut <- FAM[which(FAM$IID %in% removeFinal),1:2]
+write.table(removeOut, paste0(dirR,"/checkQC/remove_relatives.txt",collapse=""), c=F, r=F, qu=F)
+
+samtab[5,3] <- nrow(removeOut)
+samtab[5,4] <- nrow(removeOut)
+
+print("Number of duplicatd samples (PI_HAT > 0.7):")
+print(length(duplList))
+print("Number of related samples (PI_HAT > 0.1875):")
+print(length(relList))
+```
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --remove ${dir}/checkQC/remove_relatives.txt --make-bed --out ${dir}/checkQC/${prefix}_noRel
+```
+
+```{r, echo=FALSE,eval=TRUE}
+prefix <- paste0(prefix,"_noRel",collapes="")
+Sys.setenv(prefix=prefix)
+```
+
+## Population outliers 
+*(based on the set of variants meeting MAF > 5%, genotyping rate > 98% and HWE p > 1e-3 and pairwise r2 < 0.2)*
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE, include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --exclude range ${dir}/remove_prune.txt --geno 0.02 --hwe 1e-3 --maf 0.05 --set-hh-missing --indep-pairwise 200 100 0.2 --out ${dir}/checkQC/${prefix}_prunedMDS
+plink --bfile ${dir}/checkQC/${prefix} --extract ${dir}/checkQC/${prefix}_prunedMDS.prune.in --cluster --mds-plot 10 eigendecomp --out ${dir}/checkQC/${prefix}_cluster
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE, eval=TRUE}
+source(paste0(dirR,"/../../../Scripts/clusterAnalysis.r",collapse=""))
+source(paste0(dirR,"/../../../Scripts/MDS_plots.r",collapse=""))
+
+mds <- read.table(paste0(dirR,"/checkQC/",prefix,"_cluster.mds"), h=T)
+FAM <- read.table(paste0(dirR,"/checkQC/",prefix,".fam",collapse=""))
+
+
+colnames(FAM) <- c("FID", "IID", "PID", "MID", "sex", "pheno")
+FAM$sex <- factor(FAM$sex,levels=c(2,1),labels=c("F","M"))
+FAM$pheno <- factor(FAM$pheno,levels=c(1,2,-9),labels=c("ctrl","case","unknown"))
+mergedMDS <- merge(FAM,mds)
+
+threshold <- 4
+outList1 <- removeOutlier(mergedMDS, threshold, save=F, colour="sex")
+print("Number of population outliers (> 4 SD from the mean in C1 and C2):")
+print(nrow(outList1$data[,1:2]))
+write.table(outList1$data[,1:2],paste0(dirR,"/checkQC/remove_outlier.txt",collapse=""),c=F,r=F,qu=F)
+
+outList2 <- removeOutlier(mergedMDS, threshold, save=F, colour="sex", C1="C3", C2="C4")
+print("Number of population outliers (> 4 SD from the mean in C3 and C4):")
+print(nrow(outList2$data[outList2$data[,2] %in% outList1$data[,2] == FALSE,1:2]))
+write.table(outList2$data[,1:2],paste0(dirR,"/checkQC/remove_outlier2.txt",collapse=""),c=F,r=F,qu=F)
+
+outList3 <- removeOutlier(mergedMDS, threshold, save=F, colour="sex", C1="C5", C2="C6")
+print("Number of population outliers (> 4 SD from the mean in C5 and C6):")
+print(nrow(outList3$data[outList3$data[,2] %in% outList1$data[,2] == FALSE & outList3$data[,2] %in% outList2$data[,2] == FALSE,1:2]))
+write.table(outList3$data[,1:2],paste0(dirR,"/checkQC/remove_outlier3.txt",collapse=""),c=F,r=F,qu=F)
+
+out1 <- outList1$data[,1:2]
+out2 <- outList2$data[,1:2]
+out3 <- outList3$data[,1:2]
+outpop <- unique(rbind(out1,out2,out3))
+
+samtab[6,3] <- nrow(outpop)
+samtab[6,4] <- nrow(outpop)
+
+print("MDS plot before removal of outliers")
+plot <- plotMDS_all(mergedMDS,colour="sex",save=F)
+```
+
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE,include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --remove ${dir}/checkQC/remove_outlier.txt --make-bed --out ${dir}/checkQC/${prefix}_noOutl
+plink --bfile ${dir}/checkQC/${prefix}_noOutl --remove ${dir}/checkQC/remove_outlier2.txt --make-bed --out ${dir}/checkQC/${prefix}_noOutl
+plink --bfile ${dir}/checkQC/${prefix}_noOutl --remove ${dir}/checkQC/remove_outlier3.txt --make-bed --out ${dir}/checkQC/${prefix}_noOutl
+plink --bfile ${dir}/checkQC/${prefix}_noOutl --exclude range ${dir}/remove_prune.txt --geno 0.02 --hwe 1e-3 --maf 0.05 --set-hh-missing --indep-pairwise 200 100 0.2 --out ${dir}/checkQC/${prefix}_noOutl_prunedMDS
+plink --bfile ${dir}/checkQC/${prefix}_noOutl --extract ${dir}/checkQC/${prefix}_noOutl_prunedMDS.prune.in --cluster --mds-plot 10 eigendecomp --out ${dir}/checkQC/${prefix}_noOutl_cluster
+```
+
+```{r, echo=FALSE,eval=TRUE}
+prefix <- paste0(prefix,"_noOutl",collapes="")
+Sys.setenv(prefix=prefix)
+```
+
+
+```{bash, echo=FALSE, message=FALSE, error=FALSE,include=FALSE, eval=TRUE}
+plink --bfile ${dir}/checkQC/${prefix} --exclude range ${dir}/remove_prune.txt --geno 0.02 --hwe 1e-3 --maf 0.05 --set-hh-missing --indep-pairwise 200 100 0.2 --out ${dir}/checkQC/${prefix}_prunedMDS
+plink --bfile ${dir}/checkQC/${prefix} --extract ${dir}/checkQC/${prefix}_prunedMDS.prune.in --cluster --mds-plot 10 eigendecomp --out ${dir}/checkQC/${prefix}_cluster
+```
+
+
+# Summary of performed QC
+
+## Sample QC
+
+```{r, echo=FALSE,eval=TRUE}
+kable(samtab)
+famstart <- read.table(paste0(dirR,"/",prefix1,".fam",collapse=""))
+famend <- read.table(paste0(dirR,"/checkQC/",prefix,".fam",collapse=""))
+```
+
+Some information about the sample QC: 
+
+- Sex problems could not be checkes as we only received imputed genotype data for the autosomal chromosomes
+
+*After sample QC the total number of samples was* **`r nrow(famend)`** .
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, error=FALSE, eval=TRUE}
+mds <- read.table(paste0(dirR,"/checkQC/",prefix,"_cluster.mds"), h=T)
+FAM <- read.table(paste0(dirR,"/checkQC/",prefix,".fam"))
+colnames(FAM) <- c("FID", "IID", "PID", "MID", "sex", "pheno")
+FAM$sex <- factor(FAM$sex,levels=c(2,1),labels=c("F","M"))
+FAM$pheno <- factor(FAM$pheno,levels=c(1,2,-9),labels=c("ctrl","case","unknown"))
+mergedMDS <- merge(FAM,mds)
+
+print("MDS plot after removal of outliers")
+plot <- plotMDS_all(mergedMDS,colour="sex",save=F)
+```
+
+
+
+
+
+
+
+

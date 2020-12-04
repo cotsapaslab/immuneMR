@@ -49,8 +49,8 @@ Our pipeline is split into fourteen distinct steps. These are:
 + Pandoc 2.0.4
 + tabix 0.2.6
 + VCFtools 0.1.14
-+ PRSice-2
-+ JLIM 2.0 (https://github.com/cotsapaslab/jlim)
++ PRSice-2 (PRSice.R and PRSice_linux need to be put into Scripts/PRS) 
++ JLIM 2.0 (https://github.com/cotsapaslab/jlim, the jlim-master directory needs to be put into Scripts/JLIM)
 + R v3.4.1 or later (including packages ggplot2 v3.3.3, plyr v1.8.6, tidyr v1.0.2, gridExtra v.3, knitr v1.28, ggsci v2.9, gCMAP v1.22.1, readxl v1.3.1, png v0.1-7, biomaRt v2.34.2)
 + R v3.5.0 (used with the package TwosampleMR v0.4.25)
 + For software dependencies needed for the Gtex pipeline please see https://www.gtexportal.org/, Analysis Methods for V8.

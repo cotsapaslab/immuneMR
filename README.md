@@ -58,6 +58,13 @@ Our pipeline is split into fourteen distinct steps. These are:
 ### Running the pipeline
 Except for the alignment, quantification and quality control of the BLUEPRINT gene expression data (for this see `Scripts/GenExp_phenodata.sh` and the Gtex pipeline) the entire pipeline can be run from `MasterScript.sh`, which calls the scripts included in this distribution to execute all fourteen steps of our pipeline. The script is not intended as a stand-alone, unsupervised piece of code - rather, it steps through the various procedures. User input is required at various stages.
 
+### Description of files and directories in this distribution
+
+| File/directory | Description |
+| ------------- | ------------- |
+| Scripts/  | Contains all scripts required in by the pipeline.  |
+| MasterScript.sh  | Main script with fourteen QC and analysis steps of our pipeline.  |
+| README.md  | This file.  |
 
 
 

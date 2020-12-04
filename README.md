@@ -23,3 +23,28 @@ We used gene expression data and genotype data from the BLUEPRINT consortium and
 + Phenotype data: We obtained flow cytometry measurements for 166 immune phenotypes of 816 individuals (file name: LabExMI_rawfacs.txt) and additional information including age, smoking status and CMV infection (file name: LabExMI_covariates.txt).
 + Genotype data: We obtained quality controlled and imputed genotype data from 816 individuals (file name: LabExMI_imputation_816x5699237.bim/.bed/.fam).
 
+## Running our analysis pipeline
+Here, we provide the code required to re-analyze the data and replicate our published results. For the seq alignment, quantification and quality control of the BLUEPRINT gene expression data please refer to the GTex pipeline (https://www.gtexportal.org/, Analysis Methods for V8).
+
+### Pipeline overview
+Our pipeline is split into fourteen distinct steps. These are:
+
++ Preparation of the Milieu Intérieur project phenotype data (quality control (QC) and normalization). 
++ QC of the Milieu Intérieur project genotype data
++ Preparation of the covariates for the Milieu Intérieur project data set
++ Alignment, quantification and quality control of the BLUEPRINT gene expression data
++ QC of the BLUEPRINT genotype data
++ Preparation of the covariates for the BLUEPRIN data set
++ GWAS analyses on the Milieu Intérieur project immune cell phenotypes 
++ Selection of genetic loci association with immune cell phenotypes
++ Perform conditional association analyses on the Milieu Intérieur project immune cell phenotypes 
++ Perform unconditional and conditional association analyses on the BLUEPRINT gene expression data (eQTL analysis)
++ JLIM analysis to identify shared association between gene expression and immune cell phenotypes 
++ Polygenic score (PGS) analysis to identify overall genetic correlation between gene expression and immune cell phenotypes 
++ Transcriptome-wide summary statistics-based Mendelian Randomization (TWMR) analysis (see Porcu et al., Nature Communications, 2019, https://www.nature.com/articles/s41467-019-10936-0)
++ Two sample MR (TSMR) analysis
+
+
+
+
+

@@ -1,7 +1,7 @@
 # immuneMR
 
 ## Contact
-4 Decmber 2020 <br>
+4 December 2020 <br>
 [Christiane Gasperi](mailto:c.gasperi@tum.de) <br>
 [Chris Cotsapas](mailto:cotsapas@broadinstitute.org) <br>
 
@@ -17,9 +17,9 @@ We used gene expression data and genotype data from the BLUEPRINT consortium and
 
 ### BLUEPRINT data set
 + Gene expression data: We downloaded FASTQ files for the RNAseq data for naive CD4+ T cells (169 individuals), CD14+ monocytes (193 individuals) and CD16+ neutrophils (196 individuals) from the BLUEPRINT consortium [Chen et al., Cell, 2016] (https://pubmed.ncbi.nlm.nih.gov/27863251). We used the GTEx pipeline for RNA-seq alignment, quantification and quality control (https://www.gtexportal.org/, Analysis Methods for V8). `Scripts/GenExp_phenodata.sh` gives an overview on how we applied the GTEx pipeline and can be used for orientation, but is not directly applicable to other data sets or computing environment needs user input and adaptations at various stages.
-+ Genotype data: We obtained genotype data for all individuals for 7,008,524 variants acquired by whole genome sequencing (file name: EGAZ00001235598_release_vcf_06092016_All_chr.BPWP10_13_12_15.vcf). We performed further quality control of the genotype data as decribed in `MasterScript.sh`.
++ Genotype data: We obtained genotype data for all individuals for 7,008,524 variants acquired by whole genome sequencing (file name: EGAZ00001235598_release_vcf_06092016_All_chr.BPWP10_13_12_15.vcf). 
 
 ### Milieu Intérieur project data set
-+ 
-
++ Phenotype data: We obtained flow cytometry measurements for 166 immune phenotypes of 816 individuals (file name: LabExMI_rawfacs.txt) and additional information including age, smoking status and CMV infection (file name: LabExMI_covariates.txt).
++ Genotype data: We obtained quality controlled and imputed genotype data from 816 individuals (file name: LabExMI_imputation_816x5699237.bim/.bed/.fam).
 

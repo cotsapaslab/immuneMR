@@ -50,7 +50,7 @@ DATA_DIR="${WORK_DIR}/BP/Data" # Directory for the BLUEPRINT data set
 	# Metadata of the BLUEPRINT samples can be obtained from the BLUEPRINT consortium (directory called EGAD00001002663 and needs to be in ${WORK_DIR}/BP/Data/
 
 
-## Software/executables that need to be downloaded and sotred: 
+## Software/executables that need to be downloaded and stored: 
 	# PRSice-2: PRSice.R and PRSice_linux in ${WORK_DIR}/Scripts/PRS/
 	# JLIM 2.0: download (directory called jlim-master) and put into ${WORK_DIR}/Scripts/JLIM/
 

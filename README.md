@@ -64,6 +64,7 @@ Except for the alignment, quantification and quality control of the BLUEPRINT ge
 | ------------- | ------------- |
 | Scripts/  | Contains all scripts required in by the pipeline.  |
 | MasterScript.sh  | Main script with fourteen QC and analysis steps of our pipeline.  |
+| Scripts/GenExp_phenodata.sh  | Overview on how we applied the Gtex pipeline on the BLUEPRINT gene expression data.  |
 | README.md  | This file.  |
 
 

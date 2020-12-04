@@ -44,7 +44,16 @@ Our pipeline is split into fourteen distinct steps. These are:
 + Transcriptome-wide summary statistics-based Mendelian Randomization (TWMR) analysis (see Porcu et al., Nature Communications, 2019, https://www.nature.com/articles/s41467-019-10936-0)
 + Two sample MR (TSMR) analysis
 
-
+### Software dependencies
++ PLINK v1.9
++ Pandoc 2.0.4
++ tabix 0.2.6
++ VCFtools 0.1.14
++ PRSice-2
++ JLIM 2.0 (https://github.com/cotsapaslab/jlim)
++ R v3.4.1 or later (including packages 
++ R v3.5.0 (used with the package TwoSampleMr)
++ For software dependencies needed for the Gtex pipeline please see https://www.gtexportal.org/, Analysis Methods for V8.
 
 
 

@@ -55,6 +55,10 @@ Our pipeline is split into fourteen distinct steps. These are:
 + R v3.5.0 (used with the package TwosampleMR v0.4.25)
 + For software dependencies needed for the Gtex pipeline please see https://www.gtexportal.org/, Analysis Methods for V8.
 
+### Running the pipeline
+Except for the alignment, quantification and quality control of the BLUEPRINT gene expression data (for this see `Scripts/GenExp_phenodata.sh` and the Gtex pipeline) the entire pipeline can be run from `MasterScript.sh`, which calls the scripts included in this distribution to execute all fourteen steps of our pipeline. The script is not intended as a stand-alone, unsupervised piece of code - rather, it steps through the various procedures. User input is required at various stages.
+
+
 
 
 

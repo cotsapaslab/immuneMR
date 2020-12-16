@@ -5,8 +5,6 @@ library(tidyr)
 dat <- read.table(args[1],sep="\t",h=T)
 
 dat <- dat[,c("ImmPhen","CellType","Gene","Cond1stname","Cond1st","Cond2ndname","Cond2nd","idxSNP","idxBP","idxP","minP2","STAT","p","Locus")]
-
-#---------------------- I made a mistake with the conditioning on the 2nd trait so I have some duplicates------ these have to be filetered out here -------
 dat <- unique(dat)
 
 # Remove unconditioned association signals when there are conditioned
